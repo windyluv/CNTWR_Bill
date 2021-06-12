@@ -1,16 +1,15 @@
-# This is a sample Python script.
-
-# Press Shift+F10 to execute it or replace it with your code.
-# Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
-
-
-def print_hi(name):
-    # Use a breakpoint in the code line below to debug your script.
-    print(f'Hi, {name}')  # Press Ctrl+F8 to toggle the breakpoint.
+import pandas as pd
+import os
+from func_lib import *
+pd.options.display.max_columns = None
+org_dir = r''
+save_path = r''
 
 
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
-    print_hi('PyCharm')
+    print(u'任务启动')
+    datas_path = os.listdir()
+
 
 # See PyCharm help at https://www.jetbrains.com/help/pycharm/
