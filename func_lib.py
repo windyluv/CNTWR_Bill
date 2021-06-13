@@ -91,6 +91,11 @@ def rent_verify(clean_bill):
                        aggfunc={'场地费': np.sum, '场地费折扣后金额（出账费用）': np.sum, '场地费当前共享折扣': np.mean},fill_value=0)
     return rent_bill
 
+def tower_shape_consistency_test(dataframe):
+    __=pd.pivot_table(dataframe,index=['站址编码','产品类型']).reset_index().iloc[:,:2]
+    rules=__['站址编码'].duplicated() #筛选重复项
+    tower_shape_error_site_list=__[rules].drop_duplicates()
+    return tower_shape_error_site_list.set_index('站址编码')
 
 
 #Expected：相邻月份账单;   Return：异常数据（变动数据）
