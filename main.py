@@ -18,6 +18,7 @@ if __name__ == '__main__':
     root=os.getcwd()
     discount_error_path=['塔类折扣不一致清单','机房折扣不一致清单','配套折扣不一致清单','维护费折扣不一致清单','场地费折扣不一致清单']
     print(u'任务启动')
+    @timer
     dx_clean_bill=bill_clean(datas_root[0])
     dx_tower_error_site=tower_shape_consistency_test(dx_clean_bill)
     discount_errors_list=discount_error_rules(dx_clean_bill)
