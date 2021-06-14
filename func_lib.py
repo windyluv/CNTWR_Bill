@@ -1,8 +1,17 @@
 import pandas as pd
-import datetime
+import time
 import os
 import numpy as np
-t0=datetime.datetime.now()
+import calendar
+
+def timer(func):
+    def wrapper():
+        start=time.time()
+        func()
+        end=time.time()
+        return end-start
+    return wrapper
+
 #Expected 原始账单; Return:分析报告及字典文件
 def bill_report(data):
     site_total_num = data['站址编码'].nunique()  # 站址总数量（不区分非标）
@@ -91,11 +100,46 @@ def rent_verify(clean_bill):
                        aggfunc={'场地费': np.sum, '场地费折扣后金额（出账费用）': np.sum, '场地费当前共享折扣': np.mean},fill_value=0)
     return rent_bill
 
+#Expected 精简账单; Return:异常站址df
 def tower_shape_consistency_test(dataframe):
     __=pd.pivot_table(dataframe,index=['站址编码','产品类型']).reset_index().iloc[:,:2]
     rules=__['站址编码'].duplicated() #筛选重复项
     tower_shape_error_site_list=__[rules].drop_duplicates()
     return tower_shape_error_site_list.set_index('站址编码')
+
+#Expected 精简账单; Return:异常折扣df列表【铁塔、机房、配套、场地费、电力引入费】
+def discount_error_rules(dataframe):
+    error_1=np.abs((dataframe['铁塔基准价格']*dataframe['铁塔当前共享折扣'])-dataframe['期末铁塔共享后基准价格1+2+3（出账费用）'])>1
+    error_2=np.abs((dataframe['机房基准价格']*dataframe['机房当前共享折扣'])-dataframe['期末机房共享后基准价格1+2+3（出账费用）'])>1
+    error_3=np.abs((dataframe['配套基准价格']*dataframe['配套当前共享折扣'])-dataframe['配套共享后基准价格1+2+3（出账费用）'])>1
+    error_4=np.abs((dataframe['维护费']*dataframe['维护费当前共享折扣'])-dataframe['维护费折扣后金额1+2+3（出账费用）'])>1
+    error_5=np.abs((dataframe['场地费']*dataframe['场地费当前共享折扣'])-dataframe['场地费折扣后金额（出账费用）'])>1
+    idx_1 = [i for i in range(18)]
+    idx_2 = [i for i in range(11)] + [i for i in range(21, 28)]
+    idx_3 = [i for i in range(11)] + [i for i in range(31,38)]
+    idx_4 = [i for i in range(11)] + [i for i in range(41,48)]
+    idx_5 = [i for i in range(11)] + [i for i in range(51,58)]
+    dataframe_error_tt=dataframe[error_1].iloc[:,idx_1]
+    dataframe_error_jf=dataframe[error_2].iloc[:,idx_2]
+    dataframe_error_pt=dataframe[error_3].iloc[:,idx_3]
+    dataframe_error_whf=dataframe[error_4].iloc[:,idx_4]
+    dataframe_error_cdf=dataframe[error_5].iloc[:,idx_5]
+    return [dataframe_error_tt,dataframe_error_jf,dataframe_error_pt,dataframe_error_whf,dataframe_error_cdf]
+
+#Expected 异常折扣df列表; Return:当月折扣变化Bool量
+def discount_current_month_occur_determine(dataframe):
+    bill_year,bill_month=dataframe.iloc[:,0].reset_index(drop=True).astype(str)[0][:4],dataframe.iloc[:,0].reset_index(drop=True).astype(str)[0][4:]
+    rules = (dataframe.iloc[:,13].astype(str).map(lambda x: x[:4]) == bill_year)&(dataframe.iloc[:,13].astype(str).map(lambda x: x[5:7]) == bill_month)
+    return rules
+#Expected 当月折扣发生变化量; Return:当月折扣变化异常Bool量
+def discount_new_discount_logic_judge(dataframe):
+    bill_year,bill_month=dataframe.iloc[:,0].reset_index(drop=True).astype(str)[0][:4],dataframe.iloc[:,0].reset_index(drop=True).astype(str)[0][4:]
+    month_days=calendar.monthrange(int(bill_year), int(bill_month))[1]
+    ex_discount_effect_days=dataframe.iloc[:,13].astype(str).map(lambda x: x[8:10]).astype(int)-1
+    new_discount_effect_days=month_days-ex_discount_effect_days
+    logic_payment=dataframe.iloc[:,11]/month_days*(dataframe.iloc[:,14]* new_discount_effect_days+ dataframe.iloc[:,16]*ex_discount_effect_days)
+    rules=abs(logic_payment-dataframe.iloc[:,17])<1
+    return rules
 
 
 #Expected：相邻月份账单;   Return：异常数据（变动数据）
