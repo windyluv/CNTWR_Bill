@@ -2,7 +2,7 @@ import pandas as pd
 import os
 from func_lib import *
 pd.options.display.max_columns = None
-org_dir_dx = r'C:\Users\18005\Desktop\塔类产品服务费结算详单-合肥市-电信-202105.xlsx'
+org_dir_dx = r'D:\onedirve\OneDrive\桌面\org_bill\塔类产品服务费结算详单-合肥市-电信-202105.xlsx'
 org_dir_yd = r'D:\onedirve\OneDrive\桌面\org_bill\塔类产品服务费结算详单-合肥市-移动-202105.xlsx'
 org_dir_lt = r'D:\onedirve\OneDrive\桌面\org_bill\塔类产品服务费结算详单-合肥市-联通-202105.xlsx'
 org_dir_all= r'D:\onedirve\OneDrive\桌面\org_bill\塔类产品服务费结算详单-合肥市-202105.xlsx'
@@ -18,15 +18,13 @@ if __name__ == '__main__':
     root=os.getcwd()
     discount_error_path=['塔类折扣不一致清单','机房折扣不一致清单','配套折扣不一致清单','维护费折扣不一致清单','场地费折扣不一致清单']
     print(u'任务启动')
-
     dx_clean_bill=bill_clean(datas_root[0])
-    dx_clean_bill.to_excel(r'C:\Users\18005\Desktop\dx-clean-202105.xlsx')
-    # dx_tower_error_site=tower_shape_consistency_test(dx_clean_bill)
-    # discount_errors_list=discount_error_rules(dx_clean_bill)
-    # dx_tower_error_site.to_excel(os.path.join(root,'塔型不一致清单.xlsx'))
-    # for i in range(len(discount_errors_list)):
-    #     discount_error = discount_errors_list[i]
-    #     discount_error.to_excel(os.path.join(root,discount_error_path[i]+'.xlsx'),index=False)
+    dx_tower_error_site=tower_shape_consistency_test(dx_clean_bill)
+    discount_errors_list=discount_error_rules(dx_clean_bill)
+    dx_tower_error_site.to_excel(os.path.join(root,'塔型不一致清单.xlsx'))
+    for i in range(len(discount_errors_list)):
+        discount_error = discount_errors_list[i]
+        discount_error.to_excel(os.path.join(root,discount_error_path[i]+'.xlsx'),index=False)
 
 
 
