@@ -2,7 +2,7 @@ import pandas as pd
 import os
 from func_lib import *
 pd.options.display.max_columns = None
-org_dir_dx = r'D:\onedirve\OneDrive\桌面\org_bill\塔类产品服务费结算详单-合肥市-电信-202105.xlsx'
+org_dir_dx = r'D:\onedirve\OneDrive\桌面\org_bill\塔类产品服务费结算详单-合肥市-电信-20210.xlsx'
 org_dir_yd = r'D:\onedirve\OneDrive\桌面\org_bill\塔类产品服务费结算详单-合肥市-移动-202105.xlsx'
 org_dir_lt = r'D:\onedirve\OneDrive\桌面\org_bill\塔类产品服务费结算详单-合肥市-联通-202105.xlsx'
 org_dir_all= r'D:\onedirve\OneDrive\桌面\org_bill\塔类产品服务费结算详单-合肥市-202105.xlsx'
