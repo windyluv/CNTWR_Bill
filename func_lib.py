@@ -12,32 +12,20 @@ def timer(func):
         return end-start
     return wrapper
 
-
-
-# Expected 账单路径; Return:账单DataFrame文件1
-def bill_read(root):
-    data = pd.read_excel(root,converters={"站址编码":str,"需求确认单编号":str})
-    return data
-
 #Expected 原始账单; Return:分析报告及字典文件
-def bill_report(data,nonzero=False):
-    income_cancel = data['产品服务费合计（历史待退回费用）（不含税）'].sum()
-    if nonzero:
-        data = data[data['产品服务费合计\n（出账费用）（不含税）'] > 0]
+def bill_report(data):
     site_total_num = data['站址编码'].nunique()  # 站址总数量（不区分非标）
     credit_term = data['账期月份'][0]  # 当前账期
     order_total_num = data['需求确认单编号'].nunique()  # 订单总数量
     income_monthly = data['产品服务费合计\n（出账费用）（不含税）'].sum() # 当月产生金额
     income_history_adjust = data['产品服务费合计（历史调增/已抵扣费用）（不含税）'].sum()  # 历史调整金额
-    income_total=data['产品服务费合计（出账费用+历史调增/已抵扣费用）（不含税）'].sum() # 当月应出账金额
-    #income_total = data[data['运营商']=='电信']['产品服务费合计（出账费用+历史调增/已抵扣费用）（不含税）'].sum() # 当月应出账金额
+    income_total = data[data['运营商']=='电信']['产品服务费合计（出账费用+历史调增/已抵扣费用）（不含税）'].sum() # 当月应出账金额
     income_tower = data['期末铁塔共享后基准价格1+2+3（出账费用）'].sum()
     income_power_room = data['期末机房共享后基准价格1+2+3（出账费用）'].sum()
     income_supply = data['配套共享后基准价格1+2+3（出账费用）'].sum()
     income_repair = data['维护费折扣后金额1+2+3（出账费用）'].sum()
     income_rent = data['场地费折扣后金额（出账费用）'].sum()
     income_eletricity = data['电力引入费折扣后金额（出账费用）'].sum()
-    income_power_supply= data['油机发电服务费（非包干）（出账费用+历史调增/已抵扣费用）'].sum()
     order_standard_num = data[data['业务属性'] == '塔']['需求确认单编号'].nunique()  # 塔类订单总数量
     order_non_standard_num = data[data['业务属性'] == '非标类']['需求确认单编号'].nunique()  # 非标类订单总数量
     order_standard_income = data[data['业务属性'] == '塔']['产品服务费合计（出账费用+历史调增/已抵扣费用）（不含税）'].sum()  # 塔类订单总收入
@@ -60,17 +48,15 @@ def bill_report(data,nonzero=False):
     percent_of_shared_site_buy = round(1 - (site_total_buy_alone_num / site_total_buy_num), 4)#注入共享站比例
     report={'账期月份':str(credit_term),'产品服务费合计（出账费用）（不含税）':round(income_monthly,2),'产品服务费合计（历史调增/已抵扣费用）（不含税）':round(income_history_adjust,2),
             '产品服务费合计（出账费用+历史调增/已抵扣费用）（不含税）':round(income_total,2),
-            '产品服务费合计（历史待退回费用）（不含税）':round(income_cancel,2),
-            '订单总数量':order_total_num,'塔类订单数量':order_standard_num,'塔类订单出账总金额':order_standard_income,
-            '油机发电费':round(income_power_supply*1.06,2),'场地费出账总金额':income_rent,
+            '订单总数量':order_total_num,'塔类订单数量':order_standard_num,'塔类订单出账总金额':order_standard_income,'场地费出账总金额':income_rent,
             '非标订单数量':order_non_standard_num,'非标订单出账总金额':order_non_standard_income,
             '站址总数量':site_total_num,'总站址共享比例':percent_of_shared_site_all,'新建站共享比例':percent_of_shared_site_own,'注入站共享比例':percent_of_shared_site_buy,
             '站均出账金额':income_per_site_total,'站均铁塔出账':income_per_site_tower,'站均机房出账':income_per_site_power_room,
             '站均配套出账':income_per_site_supply,'站均维护费出账':income_per_site_repair,'站均场地费出账':income_per_site_rent,'站均电力引入费出账':income_per_site_eletricity}
 
     print('{}账期，电信方向出账分析概览如下：'.format(credit_term))
-    print('出账总金额：{}万元，当月历史调整金额:{}万元，当月实际出账费用:{}万元,当月调账金额:{}万元'.
-          format(round(income_monthly/10000,3), round(income_history_adjust/10000,3), round(income_total/10000,3),round(income_cancel/10000,3)))
+    print('出账总金额：{}万元，当月历史调整金额:{}万元，当月实际出账费用:{}万元'.
+          format(round(income_monthly/10000,3), round(income_history_adjust/10000,3), round(income_total/10000,3)))
     print('出账订单合计{}条，其中塔类订单{}条，非标类订单{}条'.
           format(order_total_num, order_standard_num, order_non_standard_num))
     print('塔类订单合计出账：{}万元，非标类订单合计出账：{}万元，场地费合计出账：{}万元'.
@@ -80,9 +66,7 @@ def bill_report(data,nonzero=False):
     print('出账站址共{}处，共享率为{}%'.format(site_total_num, round(percent_of_shared_site_all * 100,2)))
     print('出账注入站站址共{}处，共享率为{}%'.format(site_total_buy_num, round(percent_of_shared_site_buy*100,2)))
     print('出账新建站站址共{}处，共享率为{}%'.format(site_total_own_num, round(percent_of_shared_site_own*100,2)))
-    report =pd.DataFrame([report])
-
-    return report
+    return [report]
 
 #Expected：原始账单; Return:精简账单
 def bill_clean(bill_path):
